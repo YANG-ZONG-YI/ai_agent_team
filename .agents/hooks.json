@@ -1,0 +1,31 @@
+{
+  "$schema": "https://antigravity.google/schemas/hooks.json",
+  "project-architecture-gate": {
+    "enabled": false,
+    "description": "專案專用架構防護與危險指令攔截 Hook。可於需要時將 enabled 設為 true 啟用。",
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Write-Output '{\\\"decision\\\":\\\"allow\\\"}'\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "write_to_file|replace_file_content",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Write-Output '{\\\"decision\\\":\\\"allow\\\"}'\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}
