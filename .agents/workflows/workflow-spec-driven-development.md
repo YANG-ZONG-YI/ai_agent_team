@@ -26,19 +26,22 @@ description: 規格驅動開發全生命週期工作流 (從 Proposal 提案、S
 ### 階段 3：原子任務分解 (Task Breakdown Phase)
 1. 由 `system-architect` 與 `tdd-engineer` 共同編排實施步驟。
 2. 參考 [tasks-template.md](../skills/spec-driven-lifecycle/templates/tasks-template.md) 建立 `docs/tasks/tasks-<name>.md`。
-3. 每個子項目必須具備 `[ ]` Checkbox，並嚴格將「紅燈測試編寫」排在「業務代碼實作」之前。
+3. 每個子項目必須具備 `[ ]` Checkbox，並嚴格包含「階段 0：Docker 容器環境前置檢核」與「紅燈測試先行」。
 4. **檢查點**：任務清單鎖定後，推進至階段 4。
 
-### 階段 4：斷點實施與進度勾選 (Apply & TDD Phase)
-1. 調度 `tdd-engineer` 循序執行：
+### 階段 4：Docker 隔離斷點實施與進度勾選 (Apply & TDD Phase)
+1. **Docker 前置環境門禁（Hard Requirement）**：
+   - 實施前必須確認 Docker 容器已啟動。
+   - 嚴禁直接在宿主環境調用編譯器或運行測試，**非 Docker 環境必須強制停止（STOP）**。
+2. 調度 `tdd-engineer` 於 **Docker 容器內** 循序執行：
    - 讀取 `docs/tasks/` 中第一個未勾選 `[ ]` 的任務。
-   - 先編寫失敗測試（Red），確認測試變紅。
-   - 編寫最小實作代碼使測試通過（Green）。
+   - 先編寫失敗測試（Red），於 Docker 容器內執行確認測試變紅。
+   - 編寫最小實作代碼，於 Docker 容器內使測試通過（Green）。
    - 進行代碼結構重構（Refactor）。
    - 將該任務勾選為 `[x]`。
-2. 執行驗證腳本：
+3. 執行驗證腳本：
    `powershell -NoProfile -ExecutionPolicy Bypass -File .agents/skills/spec-driven-lifecycle/scripts/check-task-progress.ps1`
-3. 循環推進直至所有項目全數標記為 `[x]`。
+4. 循環推進直至所有項目全數標記為 `[x]`。
 
 ---
 
@@ -46,4 +49,5 @@ description: 規格驅動開發全生命週期工作流 (從 Proposal 提案、S
 若對話因長度中斷或切換新對話，使用者只需輸入：
 > 「讀取最新的 tasks 檔案並繼續未完成任務」
 
-Agent 將主動解析未完成項立即無縫接軌，無需重複訪談或重新解釋架構。
+Agent 將主動解析未完成項，先驗證 Docker 容器狀態後立即無縫接軌，無需重複訪談或重新解釋架構。
+

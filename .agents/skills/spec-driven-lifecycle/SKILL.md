@@ -66,12 +66,15 @@ graph LR
 1. **觸發時機**：用戶指示「開始實作」或「繼續任務」時。
 2. **指派角色**：調度 `tdd-engineer`。
 3. **無縫接關與執行原則**：
+   - **Docker 容器硬性門禁（Hard Stop if not in Docker）**：
+     - 所有套件安裝、代碼編譯與測試執行**必須 100% 在 Docker 容器內運行**。
+     - 嚴禁直接在宿主機（Host）執行 `npm`, `pip`, `go test` 等命令。若 Docker 尚未啟動或環境未就緒，**Agent 必須立即停止（STOP）並提示用戶**。
    - **讀取斷點**：讀取 `docs/tasks/tasks-<feature>.md`，找到**第一個未勾選 `[ ]`** 的任務。
-   - **TDD 實作**：先寫失敗測試（Red），再寫最小實作代碼（Green），最後重構（Refactor）。
+   - **Docker 內 TDD 實作**：先在 Docker 容器內跑失敗測試（Red），再寫最小實作代碼在 Docker 內通過（Green），最後重構（Refactor）。
    - **勾選狀態**：實作通過驗收測試後，**主動將該項修改為 `[x]`**。
    - **進度檢查**：可呼叫輔助腳本查看即時進度：
      `powershell -NoProfile -ExecutionPolicy Bypass -File .agents/skills/spec-driven-lifecycle/scripts/check-task-progress.ps1`
-   - **會話中斷重啟**：若對話重新開始，Agent 只要重新讀取 `tasks.md`，立即自未完成的第一項無縫接關，零進度遺失。
+   - **會話中斷重啟**：若對話重新開始，Agent 只要重新讀取 `tasks.md`，在 Docker 環境中立即自未完成的第一項無縫接關，零進度遺失。
 
 ---
 

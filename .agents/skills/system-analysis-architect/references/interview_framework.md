@@ -1,102 +1,96 @@
-# 系統需求訪談與架構探索框架 (Requirements Discovery & Interview Rubric)
+# 顧問級 Grill-Me 需求與架構深度拷問手冊 (Grill-Me Interview Rubric)
 
-本框架提供身為顧問級商業分析師（Lead BA）與首席架構師（Chief Architect）在面對未知或模糊系統時，進行精準探詢的六階段問題清單。
-
----
-
-## 階段 1：業務願景與商業目標 (Business Vision & Goals)
-
-> **目標**：確認系統建立的根本原因（Why），錨定核心價值，避免做出無價值的過度工程。
-
-### 探詢維度：
-1. **核心痛點與動機**：
-   * 目前現行的作業模式（人工、舊系統、試算表）遇到了什麼無法克服的瓶頸？
-   * 若此系統成功上線，最關鍵想要改善的單一商業指標（North Star Metric）是什麼？（例如：訂單處理效率提升 300%、退貨爭議率降低 80%）
-2. **利害關係人與終端用戶畫像 (Personas)**：
-   * 系統有哪些直接使用者（終端客戶、後台營運、倉儲人員、財務審核等）？
-   * 各角色在系統中的權限層級與操作頻率為何？
-3. **專案範圍界線 (Scope Boundaries)**：
-   * 什麼是 **MVP（最小可行性產品）第一期必須包含的**？
-   * 什麼是明確**不在第一期範圍內（Out of Scope）** 的？
+本手冊規範在執行系統訪談時，如何如同 `/grill-me` 般沿著決策樹（Design Tree）逐個分支深挖，透過 `ask_question` 工具消弭所有模糊地帶，同時將 Docker 容器化開發環境列為前置不可變量。
 
 ---
 
-## 階段 2：DDD 業務領域探索與事件風暴 (Domain Exploration & Event Storming)
+## 訪談核心鐵律 (Grill-Me Golden Rules)
 
-> **目標**：從業務本質出發，梳理業務流程中的動態事件與靜態實體，提煉統一語言（Ubiquitous Language）。
-
-### 探詢維度：
-1. **核心業務事件 (Domain Events - 過去式動詞)**：
-   * 在使用流程中，關鍵的「里程碑事件」有哪些？（例如：`OrderPlaced` 訂單已建立、`PaymentAuthorized` 付款已授權、`InventoryReserved` 庫存已保留、`GoodsDispatched` 商品已出貨）
-2. **限界上下文劃分 (Bounded Contexts)**：
-   * 系統自然可以拆分成哪些獨立的業務子域？
-     * **核心域 (Core Domain)**：為業務帶來競爭優勢的核心邏輯（如：定價策略引擎、智能匹配算法）。
-     * **支撐域 (Supporting Domain)**：輔助核心業務但無直接競爭優勢（如：庫存履約、發票開立）。
-     * **通用域 (Generic Domain)**：市面上有現成解決方案（如：會員身份認證 Auth、簡訊/Email 發送）。
-3. **實體與聚合根 (Aggregates & Invariants)**：
-   * 哪些業務規則是「永遠不可被破壞」的生命週期約束？（例如：訂單一旦進入「處理中」，商品明細即不可任意刪除；帳戶扣款時餘額不得為負數）。
+1. **分支逐一突破（One Branch at a Time）**：解鎖上游決策前，不貿然探討下游細節。
+2. **工具調用規範**：向使用者提問時，強制使用 `ask_question` 工具，提供清晰選項並以 `(Recommended)` 標註架構師推薦方案。
+3. **代碼庫先行（Codebase First）**：若專案既有程式碼、設定檔或 Dockerfile 已存在解答，直接援引並向用戶確認，不問重複問題。
+4. **邊界拷問（Boundary Probing）**：每一個業務流程必須追問：「失敗了怎麼辦？併發了怎麼辦？超時了怎麼辦？權限不足怎麼辦？」
 
 ---
 
-## 階段 3：系統架構邊界與技術約束 (Architecture Boundaries & Constraints)
+## 階段 1：業務願景與商業目標 Grill-Me (Why & Scope)
 
-> **目標**：確立技術選型、系統形態（單體 vs 微服務）與第三方整合邊界。
+### 決策樹分支 1.1：核心痛點與北極星指標 (North Star Metric)
+* **拷問核心**：現行作業（人工作業、舊系統、試算表）最致命的痛點？上線後最看重的單一量化指標是什麼？
+* **`ask_question` 推薦範例**：
+  - 問題：「本專案首要解決的核心業務瓶頸與成功驗收指標為何？」
+  - 選項：
+    - (Recommended) 自動化核心履約流程，降低人工介入錯誤率 80% 以上
+    - 提升高併發讀寫吞吐量，支撐尖峰流量並降低延遲至 100ms 內
+    - 舊系統架構重構，建立整潔領域模型以縮短未來功能交付週期 50%
 
-### 探詢維度：
-1. **系統形態與部署拓撲**：
-   * 傾向於 **模組化單體（Modular Monolith）** 還是 **微服務架構（Microservices）**？
-   * （架構師建議：團隊規模小於 10 人或新業務孵化期，強烈建議模組化單體，待邊界穩定後再行拆分）。
-2. **技術棧生態與團隊技能**：
-   * 後端偏好：TypeScript/Node.js、Go、Java/Kotlin、C#、Python？
-   * 前端/客戶端：React/Next.js、Vue、原生 Mobile (iOS/Android) 或 Cross-platform (Flutter)？
-   * 部署環境：AWS、GCP、Azure、Kubernetes 或自建機房？
-3. **第三方外部依賴與防腐層 (ACL, Anticorruption Layer)**：
-   * 是否需介接既有系統（舊 ERP、CRM、Core-Banking）？
-   * 外部 API 服務（金流綠界/Stripe、地圖 Google Maps、簡訊 Twilio 等）的穩定性與限流限制？
+### 決策樹分支 1.2：角色矩陣與操作頻率 (Personas & Boundaries)
+* **拷問核心**：誰是系統的使用者？有誰能核准？誰只讀？有無多租戶（Multi-tenancy）？
+* **拷問邊界**：不同角色跨機構/跨門市能否查看彼此資料？
 
----
-
-## 階段 4：非功能性需求深入剖析 (Non-Functional Requirements, NFRs)
-
-> **目標**：確保系統不僅「功能正確」，且在現實世界中具備高可用、彈性與安全性。
-
-### 探詢維度：
-1. **性能與負載指標 (SLA & Latency)**：
-   * 尖峰流量預估：一般 QPS/TPS 多少？尖峰活動（如秒殺、報稅期）QPS 多少？
-   * 延遲要求：API 平均響應時間是否需在 200ms 以內？
-2. **資料特徵與持久化需求**：
-   * 讀寫比例：是典型的「讀多寫少」（如文章/商品瀏覽 99:1），還是「寫入密集」（如 IoT 上報、日誌收集）？
-   * 資料量與歷史保存：首年預期資料量有多大？歷史冷資料是否需要封存？
-3. **資料一致性與事務邊界**：
-   * 哪些環節必須保證 **強一致性（ACID）**？
-   * 哪些場景可接受 **最終一致性（Eventual Consistency）** 搭配補償機制（Saga Pattern）？
-4. **安全合規與審計**：
-   * 認證與授權機制：OAuth2 / OIDC / JWT / Session？角色權限（RBAC）還是屬性權限（ABAC）？
-   * 法規合規：GDPR、個資去識別化、信用卡 PCI-DSS、操作 Audit Log（不可竄改審計日誌）。
+### 決策樹分支 1.3：MVP 範圍嚴格鎖定 (Scope Lock)
+* **拷問核心**：第一期上線「必須具備」與「堅決不做（Out of Scope）」的功能切點在哪？
 
 ---
 
-## 階段 5：功能清單與 BDD 驗收條件 (Feature Breakdown & Acceptance)
+## 階段 2：DDD 領域探索與事件風暴 Grill-Me (Domain & Events)
 
-> **目標**：將業務語意精煉為工程人員可直接撰寫測試與代碼的具體規格。
+### 決策樹分支 2.1：過去式領域事件 (Domain Events)
+* **拷問核心**：業務主流程包含哪些具備業務意義的過去式動詞事件？
+  * 例：`OrderSubmitted` ➔ `PaymentCaptured` ➔ `InventoryAllocated` ➔ `ShipmentDispatched`。
+* **邊界拷問**：事件若重複推送（Duplicate Event），業務上是否具備冪等性保證？
 
-### 探詢維度：
-1. **Epic 與 Feature 矩陣**：
-   * 清晰梳理模組關係樹（Module → Epic → Feature）。
-2. **User Stories 與情境驗收**：
-   * 格式規範：
-     ```gherkin
-     場景 (Scenario): 買家使用折價券完成結帳
-       假設 (Given) 購物車內有總額 1000 元的有效商品
-       並且 (And) 買家擁有一張滿 800 折 100 的優惠券
-       當 (When) 買家點選確認使用該優惠券並提交結帳
-       那麼 (Then) 訂單應付款金額應為 900 元
-       並且 (And) 該優惠券狀態應變更為「已使用」
-       並且 (And) 系統應發布 OrderCreated 領域事件
-     ```
+### 決策樹分支 2.2：限界上下文劃分 (Bounded Contexts)
+* **拷問核心**：如何切分核心域（Core）、支撐域（Supporting）與通用域（Generic）？
+* **邊界拷問**：各上下文間如何傳遞訊息？共享內核（Shared Kernel）、顧客-供應商（Customer-Supplier）還是防腐層（ACL）？
+
+### 決策樹分支 2.3：聚合根與業務不變量 (Aggregates & Invariants)
+* **拷問核心**：哪一個實體擔任聚合根？聚合內不可破壞的業務鐵律為何？
+  * 例：訂單金額計算必須由 Order 聚合根統一處理，外部嚴禁直接修改 OrderItem 單價。
 
 ---
 
-## 階段 6：審核並輸出正式 SDD
+## 階段 3：Docker 開發與容器化架構拓撲 (Docker & Infrastructure)
 
-> **目標**：完成資訊收斂，嚴格依照標準範本產出軟體設計規格書。
+### 決策樹分支 3.1：強制 Docker 開發與運行環境 (Docker-Only Invariant)
+* **拷問核心**：專案開發、測試與本機執行必須 100% 於 Docker 容器進行，非 Docker 環境物理終止。
+* **`ask_question` 推薦範例**：
+  - 問題：「本專案之 Docker 容器化開發環境配置偏好？」
+  - 選項：
+    - (Recommended) 採用 Docker Compose（包含 App Container + PostgreSQL/MySQL + Redis，程式碼透過 Volume 即時熱重載）
+    - 採用輕量單一 Dockerfile（容器內包含執行時與測試環境，指令透過 docker run --rm 執行）
+    - 採用 DevContainer 標準規格（.devcontainer 配置，完全在 VSCode/IDE 容器中無縫開發）
+
+### 決策樹分支 3.2：外部依賴與防腐層 (ACL)
+* **拷問核心**：串接哪些外部第三方 API？（Stripe/綠界金流、Twilio 簡訊、外部舊 ERP）。
+* **邊界拷問**：若第三方服務斷線或超時（Timeout 5s），系統如何處理？（重試、斷路器 Circuit Breaker、落表死信隊列？）
+
+---
+
+## 階段 4：API 契約與資料持久化設計 (Contracts & DDL)
+
+### 決策樹分支 4.1：API 通訊協議與錯誤標準
+* **拷問核心**：RESTful JSON 還是 gRPC Protobuf？統一錯誤響應結構（RFC 7807 Problem Details）？
+* **邊界拷問**：關鍵寫入 API 是否具備 `Idempotency-Key` 防重機制？
+
+### 決策樹分支 4.2：資料庫模型與事務邊界
+* **拷問核心**：關聯式資料庫選型（PostgreSQL / MySQL），聚合根儲存是 3NF 還是 JSONB 混合？
+* **邊界拷問**：跨聚合操作是採用資料庫本地事務（Local Transaction），還是領域事件驅動的最終一致性（Outbox Pattern + Saga）？
+
+---
+
+## 階段 5：極限異常流與非功能性需求 (NFRs & Exceptions)
+
+### 決策樹分支 5.1：高併發與資料競態 (Concurrency Control)
+* **拷問核心**：面對秒殺、庫存扣減或重複扣款，如何防止超賣？
+  * 悲觀鎖（SELECT FOR UPDATE）vs 樂觀鎖（Version Check）vs Redis 分散式鎖？
+
+### 決策樹分支 5.2：安全防護與合規審計
+* **拷問核心**：認證授權（JWT Bearer Token / OAuth2）、敏感個資遮蔽（PII Masking）、操作審計日誌（Audit Log）。
+
+---
+
+## 階段 6：SDD 工業級規格書收斂與 TDD 驗收
+* 資訊全維度收斂完畢後，產出工業級 `docs/sdd/sdd-<name>.md`。
+* 移交 `tdd-engineer` 於 **Docker 容器內部** 啟動紅燈測試實作。
+
