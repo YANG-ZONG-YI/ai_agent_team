@@ -49,3 +49,32 @@ Google Antigravity IDE 規格驅動開發（Spec-Driven Development, SDD）與�
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .agents/skills/spec-driven-lifecycle/scripts/check-task-progress.ps1
 ```
+
+---
+
+## 自動化短影音產製與多平台分發管線 (Video Automation Pipeline)
+
+本專案現已完整實作以下核心工業級模組，100% 於 Docker 容器隔離環境運作：
+
+### 1. 服務拓撲與啟動
+```bash
+# 啟動全套 Docker 服務 (PostgreSQL + pgvector, Redis, FastAPI App, Celery Worker)
+docker compose up -d
+
+# 於 Docker 容器內執行全量自動化測試 (單元測試、整合測試、E2E 驗收)
+docker compose exec app pytest
+```
+
+### 2. 核心架構模組
+- **Notion 前端看板雙向適配器 (ACL)**：[`src/infrastructure/adapters/notion_adapter.py`](./src/infrastructure/adapters/notion_adapter.py)
+  - 支援定時輪詢 (`POST /api/v1/notion/poll`) 與即時事件接收 (`POST /api/v1/notion/webhook`)。
+  - 成片渲染後自動回填預覽 URL 與平台發布狀態至 Notion。
+- **PostgreSQL + pgvector 向量去重知識庫**：[`src/infrastructure/database/script_repository.py`](./src/infrastructure/database/script_repository.py)
+  - 1536 維度 IVFFlat 餘弦相似度比對，超過 0.85 自動判定為重複內容。
+- **三段式短影音生成引擎**：[`src/infrastructure/ai/script_generator.py`](./src/infrastructure/ai/script_generator.py)
+- **TTS 語音配音與 SRT 時間軸**：[`src/infrastructure/ai/tts_service.py`](./src/infrastructure/ai/tts_service.py)
+- **9:16 (1080x1920) 短影音渲染引擎 (MoviePy + FFmpeg)**：[`src/infrastructure/ai/video_renderer.py`](./src/infrastructure/ai/video_renderer.py)
+- **四大多平台發布矩陣 (ACL)**：[`src/infrastructure/adapters/social_publishers.py`](./src/infrastructure/adapters/social_publishers.py)
+  - YouTube Shorts, Instagram Reels, Facebook Reels, TikTok 獨立狀態機與 3 次指數退避重試防護。
+- **Celery 異步處理管線**：[`src/infrastructure/queue/tasks.py`](./src/infrastructure/queue/tasks.py)
+
