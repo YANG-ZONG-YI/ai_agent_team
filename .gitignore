@@ -17,3 +17,21 @@ desktop.ini
 *.log
 scratch/
 tmp/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+.venv/
+
+# Video Pipeline Storage (忽略動態快取與多專案成片，保留目錄骨架與公共資產)
+storage/temp/*
+!storage/temp/.gitkeep
+storage/shared/footage_cache/*
+!storage/shared/footage_cache/.gitkeep
+storage/rendered/final/*
+!storage/rendered/final/.gitkeep
+storage/rendered/thumbnails/*
+!storage/rendered/thumbnails/.gitkeep
+storage/projects/*
+!storage/projects/.gitkeep
+
+
